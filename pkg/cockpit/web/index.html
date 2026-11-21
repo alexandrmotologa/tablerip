@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>tablerip Cockpit — Financial Table Extraction & Audit</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-group">
+        <span class="logo-badge">GO</span>
+        <h1 class="logo-title">tablerip Cockpit</h1>
+        <span class="status-pill" id="docStatus">Loading Document...</span>
+      </div>
+      <div class="header-controls">
+        <div class="page-nav">
+          <button id="prevPageBtn" class="btn btn-secondary btn-sm">&larr; Prev</button>
+          <span id="pageIndicator" class="page-indicator">Page 1 / 1</span>
+          <button id="nextPageBtn" class="btn btn-secondary btn-sm">Next &rarr;</button>
+        </div>
+        <div class="export-actions">
+          <button id="exportParquetBtn" class="btn btn-primary btn-sm">Export Parquet</button>
+          <button id="exportSQLiteBtn" class="btn btn-secondary btn-sm">Export SQLite</button>
+          <button id="exportJSONBtn" class="btn btn-secondary btn-sm">Export JSON</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace Dual-Pane -->
+    <div class="workspace">
+      <!-- Left Pane: PDF Vector Overlay -->
+      <section class="pane left-pane">
+        <div class="pane-header">
+          <div class="pane-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            PDF Spatial Vector Map
+          </div>
+          <div class="vector-legend">
+            <span class="legend-item"><span class="legend-color col-header"></span>Header</span>
+            <span class="legend-item"><span class="legend-color col-label"></span>Label</span>
+            <span class="legend-item"><span class="legend-color col-metric"></span>Metric</span>
+            <span class="legend-item"><span class="legend-color col-total"></span>Total</span>
+            <span class="legend-item"><span class="legend-color col-fail"></span>Discrepancy</span>
+          </div>
+        </div>
+        <div class="pane-body canvas-wrapper" id="canvasWrapper">
+          <div class="page-canvas" id="pageCanvas">
+            <svg id="vectorOverlay" class="vector-svg" viewBox="0 0 612 792"></svg>
+            <div id="tokenLayer" class="token-layer"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Pane: Reconstructed Grid & SQL Console -->
+      <section class="pane right-pane">
+        <div class="pane-header tabs-header">
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="gridTab">Tabular Grid</button>
+            <button class="tab-btn" data-tab="auditTab">
+              Arithmetic Audit <span id="auditBadge" class="badge-audit">100%</span>
+            </button>
+            <button class="tab-btn" data-tab="sqlTab">SQL Console</button>
+          </div>
+          <div class="table-selector-group">
+            <label for="tableSelect">Table:</label>
+            <select id="tableSelect" class="form-select"></select>
+          </div>
+        </div>
+
+        <div class="pane-body tab-content-wrapper">
+          <!-- Grid View -->
+          <div id="gridTab" class="tab-pane active">
+            <div class="table-container">
+              <table id="dataTable" class="financial-table">
+                <thead id="tableHead"></thead>
+                <tbody id="tableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Audit View -->
+          <div id="auditTab" class="tab-pane">
+            <div class="audit-summary-card">
+              <div class="summary-metric">
+                <span class="metric-label">Audit Status</span>
+                <span id="auditStatusVal" class="metric-val text-success">PASSED</span>
+              </div>
+              <div class="summary-metric">
+                <span class="metric-label">Confidence Score</span>
+                <span id="auditConfVal" class="metric-val">100.0%</span>
+              </div>
+              <div class="summary-metric">
+                <span class="metric-label">Invariants Checked</span>
+                <span id="auditCheckedVal" class="metric-val">0</span>
+              </div>
+              <div class="summary-metric">
+                <span class="metric-label">Discrepancies</span>
+                <span id="auditDiscVal" class="metric-val text-success">0</span>
+              </div>
+            </div>
+
+            <div class="invariants-list" id="invariantsList">
+              <div class="empty-state">No mathematical invariants evaluated yet.</div>
+            </div>
+          </div>
+
+          <!-- SQL Console -->
+          <div id="sqlTab" class="tab-pane">
+            <div class="sql-editor-container">
+              <textarea id="sqlInput" class="sql-input" rows="4" placeholder="SELECT * FROM tbl_001 WHERE col_2025 > 50000;"></textarea>
+              <div class="sql-actions">
+                <span class="sql-hint">Runs directly against pure Go in-memory SQLite engine</span>
+                <button id="runSqlBtn" class="btn btn-primary btn-sm">Execute Query (Ctrl+Enter)</button>
+              </div>
+            </div>
+            <div class="sql-results-container" id="sqlResults">
+              <div class="empty-state">Execute a query above to inspect relational table records.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Details Footer Bar -->
+    <footer class="app-footer">
+      <div id="cellDetails" class="cell-details">Hover or click a cell to view coordinate citations and arithmetic trace.</div>
+      <div class="footer-stats">
+        <span>Engine: <strong>Pure Go (< 25MB RAM)</strong></span>
+        <span>Runtime: <strong>Zero Cgo / Zero Python</strong></span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

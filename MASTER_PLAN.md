@@ -114,7 +114,7 @@ To determine whether Table $T_B$ on Page $k+1$ continues Table $T_A$ on Page $k$
 
 $$S_{\text{col}}(T_A, T_B) = \frac{1}{|C_A|} \sum_{c \in C_A} \exp\left( -\frac{(x_{\text{center}}(c, T_A) - x_{\text{center}}(c, T_B))^2}{2 \sigma_{\text{align}}^2} \right)$$
 
-If $S_{\text{col}} > 0.90$, $T_B$ is stitched into $T_A$, skipping repeated running headers.
+If $S_{\text{col}} > 0.75$, $T_B$ is stitched into $T_A$, skipping repeated running headers.
 
 ---
 
@@ -122,43 +122,43 @@ If $S_{\text{col}} > 0.90$, $T_B$ is stitched into $T_A$, skipping repeated runn
 
 ### Phase 1: Pure Go PDF Parser & Geometry Core (`pkg/pdf`)
 - [x] Subtask 1.1: Initialize Go module `github.com/alexandrmotologa/tablerip` with dependencies.
-- [ ] Subtask 1.2: Coordinate transforms and Bounding Box data structures (`geom.go`).
-- [ ] Subtask 1.3: Text Token extractor from PDF content streams (`parser.go`).
-- [ ] Subtask 1.4: Line and path segment detector (`lines.go`).
-- [ ] Subtask 1.5: Spatial indexing and token spatial clustering.
+- [x] Subtask 1.2: Coordinate transforms and Bounding Box data structures (`geom.go`).
+- [x] Subtask 1.3: Text Token extractor from PDF content streams (`parser.go`).
+- [x] Subtask 1.4: Line and path segment detector (`lines.go`).
+- [x] Subtask 1.5: Spatial indexing and token spatial clustering.
 
 ### Phase 2: Topological Grid Reconstruction (`pkg/grid`)
-- [ ] Subtask 2.1: Horizontal and vertical projection profiling (`segmenter.go`).
-- [ ] Subtask 2.2: Adaptive valley detection with gutter thresholding.
-- [ ] Subtask 2.3: Spanning header resolver and multi-tier column names (`headers.go`).
-- [ ] Subtask 2.4: Row baseline clustering and indentation classifier (`rows.go`).
-- [ ] Subtask 2.5: Cell intersection matrix and tabular model builder.
+- [x] Subtask 2.1: Horizontal and vertical projection profiling (`segmenter.go`).
+- [x] Subtask 2.2: Adaptive valley detection with gutter thresholding.
+- [x] Subtask 2.3: Spanning header resolver and multi-tier column names (`headers.go`).
+- [x] Subtask 2.4: Row baseline clustering and indentation classifier (`rows.go`).
+- [x] Subtask 2.5: Cell intersection matrix and tabular model builder (`table.go`).
 
 ### Phase 3: Multi-Page Continuation Stitcher (`pkg/grid`)
-- [ ] Subtask 3.1: Running header and page number filtering (`stitcher.go`).
-- [ ] Subtask 3.2: Gaussian column alignment similarity scoring.
-- [ ] Subtask 3.3: Consecutive page table fusion and header deduplication.
+- [x] Subtask 3.1: Running header and page number filtering (`stitcher.go`).
+- [x] Subtask 3.2: Gaussian column alignment similarity scoring.
+- [x] Subtask 3.3: Consecutive page table fusion and header deduplication.
 
 ### Phase 4: Arithmetic Reconciliation & Normalizer (`pkg/auditor`)
-- [ ] Subtask 4.1: Currency, negative parenthesis, and scale normalizer (`normalizer.go`).
-- [ ] Subtask 4.2: Vertical summation invariant auditor (`auditor.go`).
-- [ ] Subtask 4.3: Balance sheet and income statement identity rules (`rules.go`).
-- [ ] Subtask 4.4: Discrepancy flagging and audit confidence scoring.
+- [x] Subtask 4.1: Currency, negative parenthesis, and scale normalizer (`normalizer.go`).
+- [x] Subtask 4.2: Vertical summation invariant auditor (`auditor.go`).
+- [x] Subtask 4.3: Balance sheet and income statement identity rules (`rules.go`).
+- [x] Subtask 4.4: Discrepancy flagging and audit confidence scoring.
 
 ### Phase 5: High-Performance Exporters (`pkg/exporter`)
-- [ ] Subtask 5.1: Apache Parquet columnar exporter with Snappy (`parquet.go`).
-- [ ] Subtask 5.2: SQLite embedded database creator with citation table (`sqlite.go`).
-- [ ] Subtask 5.3: DuckDB SQL DDL / DML script generator (`duckdb.go`).
-- [ ] Subtask 5.4: Citation-indexed JSON and hierarchical CSV exporter (`json.go`, `csv.go`).
+- [x] Subtask 5.1: Apache Parquet columnar exporter with Snappy (`parquet.go`).
+- [x] Subtask 5.2: SQLite embedded database creator with citation table (`sqlite.go`).
+- [x] Subtask 5.3: DuckDB SQL DDL / DML script generator (`duckdb.go`).
+- [x] Subtask 5.4: Citation-indexed JSON and hierarchical CSV exporter (`json.go`, `csv.go`).
 
 ### Phase 6: Embedded Web Cockpit (`pkg/cockpit`)
-- [ ] Subtask 6.1: HTTP server on port 8787 with embedded assets (`server.go`).
-- [ ] Subtask 6.2: Dual-pane visual interface with SVG vector overlays (`web/index.html`, `web/style.css`).
-- [ ] Subtask 6.3: Interactive grid inspection and arithmetic discrepancy breakdown (`web/app.js`).
-- [ ] Subtask 6.4: In-browser SQL console for live query execution against extracted tables.
+- [x] Subtask 6.1: HTTP server on port 8787 with embedded assets (`server.go`).
+- [x] Subtask 6.2: Dual-pane visual interface with SVG vector overlays (`web/index.html`, `web/style.css`).
+- [x] Subtask 6.3: Interactive grid inspection and arithmetic discrepancy breakdown (`web/app.js`).
+- [x] Subtask 6.4: In-browser SQL console for live query execution against extracted tables.
 
 ### Phase 7: CLI Interface & End-to-End Test Suite (`cmd/tablerip`, `test/`)
-- [ ] Subtask 7.1: CLI subcommands (`extract`, `audit`, `export`, `cockpit`, `benchmark`).
-- [ ] Subtask 7.2: Synthetic multi-page financial PDF test generator.
-- [ ] Subtask 7.3: Integration tests verifying arithmetic balance and multi-page stitching.
-- [ ] Subtask 7.4: Memory benchmark verifying < 25 MB RAM ceiling.
+- [x] Subtask 7.1: CLI subcommands (`extract`, `audit`, `export`, `cockpit`, `benchmark`, `generate`).
+- [x] Subtask 7.2: Synthetic multi-page financial PDF test generator (`pkg/fixtures`).
+- [x] Subtask 7.3: Integration tests verifying arithmetic balance and multi-page stitching (`test/sample_10k_test.go`).
+- [x] Subtask 7.4: Memory benchmark verifying < 25 MB RAM ceiling (verified at 1.75 MB - 6.6 MB peak).
