@@ -1,0 +1,181 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <clipPath id="squircle-clip">
+      <rect x="24" y="24" width="976" height="976" rx="220" />
+    </clipPath>
+  </defs>
+
+  <!-- Luxury White Squircle Container -->
+  <rect x="24" y="24" width="976" height="976" rx="220" fill="#ffffff" stroke="#e2e8f0" stroke-width="6" />
+
+  <g clip-path="url(#squircle-clip)">
+    <g transform="translate(512, 512)">
+
+      <!-- Hexagonal Architectural Gateway Outer -->
+      <polygon points="
+        0,-390
+        338,-195
+        338,195
+        0,390
+        -338,195
+        -338,-195
+      " fill="none" stroke="#0f172a" stroke-width="36" stroke-linejoin="round" />
+
+      <!-- Hexagonal Architectural Gateway Inner Telemetry -->
+      <polygon points="
+        0,-355
+        307,-177
+        307,177
+        0,355
+        -307,177
+        -307,-177
+      " fill="none" stroke="#00f5ff" stroke-width="4" opacity="0.45" stroke-dasharray="16, 12" />
+
+      <!-- Corner Telemetry Hash Marks -->
+      <line x1="0" y1="-390" x2="0" y2="-365" stroke="#00f5ff" stroke-width="4" />
+      <line x1="338" y1="-195" x2="315" y2="-182" stroke="#00f5ff" stroke-width="4" />
+      <line x1="338" y1="195" x2="315" y2="182" stroke="#00f5ff" stroke-width="4" />
+      <line x1="0" y1="390" x2="0" y2="365" stroke="#00f5ff" stroke-width="4" />
+      <line x1="-338" y1="195" x2="-315" y2="182" stroke="#00f5ff" stroke-width="4" />
+      <line x1="-338" y1="-195" x2="-315" y2="-182" stroke="#00f5ff" stroke-width="4" />
+
+      <!-- ============================================== -->
+      <!-- 100% Watertight Solid Base Silhouette (Zero-Leak) -->
+      <!-- ============================================== -->
+      <path d="
+        M 0, -300
+        L 90, -250
+        L 180, -250
+        L 245, -165
+        L 275, -60
+        L 270, 50
+        L 230, 165
+        L 165, 260
+        L 95, 325
+        L 0, 355
+        L -95, 325
+        L -165, 260
+        L -230, 165
+        L -270, 50
+        L -275, -60
+        L -245, -165
+        L -180, -250
+        L -90, -250
+        Z
+      " fill="#0b0f19" />
+
+      <!-- ============================================== -->
+      <!-- Low-Poly Origami Razor Osprey / Falcon Mesh     -->
+      <!-- Shading: Key Light Top-Left, Fill Light Top-Right -->
+      <!-- ============================================== -->
+
+      <!-- Crown Crest Feathers -->
+      <polygon points="0,-300 50,-240 0,-210" fill="#94a3b8" stroke="#1e293b" stroke-width="1.5" />
+      <polygon points="0,-300 -50,-240 0,-210" fill="#64748b" stroke="#1e293b" stroke-width="1.5" />
+
+      <polygon points="50,-240 120,-250 85,-190 0,-210" fill="#64748b" stroke="#1e293b" stroke-width="1.5" />
+      <polygon points="-50,-240 -120,-250 -85,-190 0,-210" fill="#475569" stroke="#1e293b" stroke-width="1.5" />
+
+      <polygon points="120,-250 180,-250 145,-175 85,-190" fill="#475569" stroke="#1e293b" stroke-width="1.5" />
+      <polygon points="-120,-250 -180,-250 -145,-175 -85,-190" fill="#334155" stroke="#1e293b" stroke-width="1.5" />
+
+      <!-- Forehead & Center Frontal Ridge -->
+      <polygon points="0,-210 85,-190 70,-115 0,-135" fill="#cbd5e1" stroke="#1e293b" stroke-width="1.5" />
+      <polygon points="0,-210 -85,-190 -70,-115 0,-135" fill="#94a3b8" stroke="#1e293b" stroke-width="1.5" />
+
+      <polygon points="85,-190 145,-175 135,-105 70,-115" fill="#94a3b8" stroke="#1e293b" stroke-width="1.5" />
+      <polygon points="-85,-190 -145,-175 -135,-105 -70,-115" fill="#64748b" stroke="#1e293b" stroke-width="1.5" />
+
+      <!-- Upper Temples -->
+      <polygon points="145,-175 245,-165 200,-95 135,-105" fill="#475569" stroke="#1e293b" stroke-width="1.5" />
+      <polygon points="-145,-175 -245,-165 -200,-95 -135,-105" fill="#1e293b" stroke="#1e293b" stroke-width="1.5" />
+
+      <!-- Supraorbital Eyebrow Ridges (Sharp Predator Shelves) -->
+      <polygon points="0,-135 70,-115 75,-65 0,-85" fill="#334155" stroke="#0f172a" stroke-width="1.5" />
+      <polygon points="0,-135 -70,-115 -75,-65 0,-85" fill="#1e293b" stroke="#0f172a" stroke-width="1.5" />
+
+      <polygon points="70,-115 135,-105 155,-55 75,-65" fill="#1e293b" stroke="#0f172a" stroke-width="1.5" />
+      <polygon points="-70,-115 -135,-105 -155,-55 -75,-65" fill="#0f172a" stroke="#0f172a" stroke-width="1.5" />
+
+      <!-- ============================================== -->
+      <!-- PREDATOR OPTICS: Sharp Geometric Almond Eyes   -->
+      <!-- ============================================== -->
+      <!-- Right Eye Socket & Iris -->
+      <polygon points="75,-65 148,-80 162,-40 92,-40" fill="#020408" stroke="#0f172a" stroke-width="1" />
+      <polygon points="82,-60 140,-72 152,-45 98,-44" fill="#00f5ff" />
+      <polygon points="108,-64 122,-68 118,-46 105,-45" fill="#05101a" />
+      <polygon points="94,-58 102,-60 100,-52 92,-52" fill="#ffffff" />
+
+      <!-- Left Eye Socket & Iris -->
+      <polygon points="-75,-65 -148,-80 -162,-40 -92,-40" fill="#020408" stroke="#0f172a" stroke-width="1" />
+      <polygon points="-82,-60 -140,-72 -152,-45 -98,-44" fill="#00f5ff" />
+      <polygon points="-108,-64 -122,-68 -118,-46 -105,-45" fill="#05101a" />
+      <polygon points="-94,-58 -102,-60 -100,-52 -92,-52" fill="#ffffff" />
+
+      <!-- Cheeks & Malar Facets (Below Eyes) -->
+      <polygon points="0,-85 75,-65 55,-10 0,-25" fill="#64748b" stroke="#1e293b" stroke-width="1.5" />
+      <polygon points="0,-85 -75,-65 -55,-10 0,-25" fill="#475569" stroke="#1e293b" stroke-width="1.5" />
+
+      <polygon points="92,-40 162,-40 135,25 68,15 55,-10" fill="#475569" stroke="#1e293b" stroke-width="1.5" />
+      <polygon points="-92,-40 -162,-40 -135,25 -68,15 -55,-10" fill="#1e293b" stroke="#1e293b" stroke-width="1.5" />
+
+      <!-- Outer Aerodynamic Cheeks & Shoulders -->
+      <polygon points="200,-95 275,-60 270,50 195,40 162,-40" fill="#334155" stroke="#1e293b" stroke-width="1.5" />
+      <polygon points="-200,-95 -275,-60 -270,50 -195,40 -162,-40" fill="#0f172a" stroke="#1e293b" stroke-width="1.5" />
+
+      <polygon points="195,40 270,50 230,165 155,135 135,25" fill="#1e293b" stroke="#1e293b" stroke-width="1.5" />
+      <polygon points="-195,40 -270,50 -230,165 -155,135 -135,25" fill="#0f172a" stroke="#1e293b" stroke-width="1.5" />
+
+      <!-- ============================================== -->
+      <!-- SURGICAL RAZOR HOOK BEAK                       -->
+      <!-- ============================================== -->
+      <!-- Cere (Golden Nose Bridge) -->
+      <polygon points="0,-25 55,-10 40,35 0,25" fill="#f59e0b" stroke="#b45309" stroke-width="1.5" />
+      <polygon points="0,-25 -55,-10 -40,35 0,25" fill="#d97706" stroke="#b45309" stroke-width="1.5" />
+      <circle cx="22" cy="8" r="3.5" fill="#78350f" />
+      <circle cx="-22" cy="8" r="3.5" fill="#78350f" />
+
+      <!-- Upper Beak Body (Titanium Steel Slate) -->
+      <polygon points="0,25 40,35 28,110 0,135" fill="#cbd5e1" stroke="#334155" stroke-width="1.5" />
+      <polygon points="0,25 -40,35 -28,110 0,135" fill="#94a3b8" stroke="#334155" stroke-width="1.5" />
+
+      <!-- Curving Razor Hook (Predator Slicing Tip) -->
+      <polygon points="0,135 28,110 18,175 0,195" fill="#00f5ff" stroke="#0284c7" stroke-width="1.5" />
+      <polygon points="0,135 -28,110 -18,175 0,195" fill="#0284c7" stroke="#0284c7" stroke-width="1.5" />
+
+      <!-- Lower Mandible & Chin (Recessed Behind Hook) -->
+      <polygon points="0,195 12,145 0,140" fill="#0f172a" />
+      <polygon points="0,195 -12,145 0,140" fill="#070a0f" />
+
+      <!-- ============================================== -->
+      <!-- THROAT & CHEST (Tabular Geometry & Invariants) -->
+      <!-- ============================================== -->
+      <!-- Throat Transition -->
+      <polygon points="0,140 40,35 68,15 95,95 0,175" fill="#1e293b" stroke="#1e293b" stroke-width="1.5" />
+      <polygon points="0,140 -40,35 -68,15 -95,95 0,175" fill="#0f172a" stroke="#1e293b" stroke-width="1.5" />
+
+      <!-- Breastplate Tier 1 (Folded Facets) -->
+      <polygon points="0,175 95,95 155,135 110,215 0,235" fill="#64748b" stroke="#1e293b" stroke-width="1.5" />
+      <polygon points="0,175 -95,95 -155,135 -110,215 0,235" fill="#475569" stroke="#1e293b" stroke-width="1.5" />
+
+      <!-- Breastplate Tier 2 (Tabular Spatial Slices) -->
+      <polygon points="0,235 110,215 165,260 95,325 0,305" fill="#475569" stroke="#1e293b" stroke-width="1.5" />
+      <polygon points="0,235 -110,215 -165,260 -95,325 0,305" fill="#334155" stroke="#1e293b" stroke-width="1.5" />
+
+      <!-- Lateral Wing Shields -->
+      <polygon points="155,135 230,165 165,260 110,215" fill="#334155" stroke="#1e293b" stroke-width="1.5" />
+      <polygon points="-155,135 -230,165 -165,260 -110,215" fill="#1e293b" stroke="#1e293b" stroke-width="1.5" />
+
+      <!-- Keel Apex (Bottom Point) -->
+      <polygon points="0,305 95,325 0,355" fill="#334155" stroke="#1e293b" stroke-width="1.5" />
+      <polygon points="0,305 -95,325 0,355" fill="#1e293b" stroke="#1e293b" stroke-width="1.5" />
+
+      <!-- Spatial Projection Coordinate Lasers (X-Cut & Y-Cut Blueprint Lines) -->
+      <line x1="-130" y1="215" x2="130" y2="215" stroke="#00f5ff" stroke-width="2.5" opacity="0.75" stroke-dasharray="10, 6" />
+      <line x1="-100" y1="270" x2="100" y2="270" stroke="#00f5ff" stroke-width="2.5" opacity="0.75" stroke-dasharray="10, 6" />
+      <circle cx="0" cy="235" r="5" fill="#00f5ff" />
+      <circle cx="0" cy="305" r="4" fill="#00f5ff" />
+
+    </g>
+  </g>
+</svg>

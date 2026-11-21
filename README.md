@@ -1,4 +1,24 @@
-# tablerip
+<p align="center">
+  <img src="docs/images/logo.png?raw=true" alt="tablerip Logo" width="130" style="border-radius: 24px;" />
+</p>
+
+<h1 align="center">tablerip</h1>
+
+<p align="center">
+  <strong>Pure Go Autonomous Financial Table Extraction and Arithmetic Reconciliation Engine</strong><br />
+  Spatial Projection Profiles • Cross-Page Continuation Stitching • Zero Cgo • Apache Parquet Ingestion
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/go-1.22+-00ADD8?style=flat-square&logo=go" alt="Go Version" />
+  <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" />
+  <img src="https://img.shields.io/badge/memory-%3C%2025MB%20RAM-success?style=flat-square" alt="Memory Ceiling" />
+  <img src="https://img.shields.io/badge/dependencies-0%20Cgo%20%2F%200%20Python-blue?style=flat-square" alt="Zero Dependencies" />
+</p>
+
+<p align="center">
+  <img src="docs/images/tablerip_demo.gif?raw=true" alt="tablerip Interactive Web Cockpit Demo" width="860" style="border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.3);" />
+</p>
 
 A pure Go geometric layout analyzer and financial table extractor for multi-page SEC 10-K and 10-Q filings, balance sheets, and earnings statements.
 
@@ -19,6 +39,31 @@ tablerip parses PDF content streams directly without Python or Cgo runtime depen
   - Citation-indexed JSON with exact page coordinate bounds for quantitative downstream workflows.
   - Clean CSV with indentation levels.
 - **Interactive Web Cockpit**: Embedded HTTP interface on port 8787 providing dual-pane PDF vector overlay, interactive grid inspector, arithmetic discrepancy highlights, and an integrated in-memory SQL console.
+
+## Visual Interface and Cockpit
+
+tablerip includes an embedded cockpit on port 8787 for dual-view spatial verification, live cell correction, and relational SQL exploration:
+
+### Tabular Grid and Spatial Vector Map
+Reconstructed tabular data on the right pane paired with color-coded vector glyph bounding boxes and ruling lines on the left.
+
+<p align="center">
+  <img src="docs/images/cockpit_grid_view.png?raw=true" alt="tablerip Dual-Pane Grid View" width="860" style="border-radius: 6px; border: 1px solid #30363d;" />
+</p>
+
+### Mathematical Balance Verification
+Real-time evaluation of accounting invariants, confidence score, and invariant check cards with exact mathematical delta tracking.
+
+<p align="center">
+  <img src="docs/images/cockpit_audit_view.png?raw=true" alt="tablerip Arithmetic Audit View" width="860" style="border-radius: 6px; border: 1px solid #30363d;" />
+</p>
+
+### In-Memory SQL Console and Multi-Device Adaptation
+Direct SQL query execution against pure Go in-memory SQLite tables, with pre-built query templates and responsive multi-device adaptation.
+
+<p align="center">
+  <img src="docs/images/cockpit_sql_view.png?raw=true" alt="tablerip SQL Console View" width="860" style="border-radius: 6px; border: 1px solid #30363d;" />
+</p>
 
 ## Architecture
 
