@@ -114,149 +114,51 @@ To determine whether Table $T_B$ on Page $k+1$ continues Table $T_A$ on Page $k$
 
 $$S_{\text{col}}(T_A, T_B) = \frac{1}{|C_A|} \sum_{c \in C_A} \exp\left( -\frac{(x_{\text{center}}(c, T_A) - x_{\text{center}}(c, T_B))^2}{2 \sigma_{\text{align}}^2} \right)$$
 
-If $S_{\text{col}} > 0.92$, $T_B$ is stitched into $T_A$, skipping repeated running headers.
+If $S_{\text{col}} > 0.90$, $T_B$ is stitched into $T_A$, skipping repeated running headers.
 
 ---
 
-## 4. Component Design and Subsystems
+## 4. Subsystems and Detailed Implementation Tasks
 
-### 4.1 Pure Go PDF Parser (`pkg/pdf`)
-- Zero Cgo/Python dependencies.
-- Extracts character codes, glyph bounding boxes, font metadata, and line draw primitives (`re`, `m`, `l`, `c` PDF operators).
-- Handles rotated pages, scaled matrices, and encrypted/compressed PDF streams.
+### Phase 1: Pure Go PDF Parser & Geometry Core (`pkg/pdf`)
+- [x] Subtask 1.1: Initialize Go module `github.com/alexandrmotologa/tablerip` with dependencies.
+- [ ] Subtask 1.2: Coordinate transforms and Bounding Box data structures (`geom.go`).
+- [ ] Subtask 1.3: Text Token extractor from PDF content streams (`parser.go`).
+- [ ] Subtask 1.4: Line and path segment detector (`lines.go`).
+- [ ] Subtask 1.5: Spatial indexing and token spatial clustering.
 
-### 4.2 Grid Topology Engine (`pkg/grid`)
-- Reconstructs 2D cell grid structure from text boxes and vector ruling lines.
-- Spanning Header Resolver: Links multi-tiered headers into composite column names (e.g., `Revenue.ThreeMonthsEnded.2025.Unaudited`).
-- Negative Number & Unit Parser: Normalizes accounting parenthesis `(1,234.5)` into `-1234.5`, and detects scale annotations (e.g., *"in millions, except per share data"*).
+### Phase 2: Topological Grid Reconstruction (`pkg/grid`)
+- [ ] Subtask 2.1: Horizontal and vertical projection profiling (`segmenter.go`).
+- [ ] Subtask 2.2: Adaptive valley detection with gutter thresholding.
+- [ ] Subtask 2.3: Spanning header resolver and multi-tier column names (`headers.go`).
+- [ ] Subtask 2.4: Row baseline clustering and indentation classifier (`rows.go`).
+- [ ] Subtask 2.5: Cell intersection matrix and tabular model builder.
 
-### 4.3 Arithmetic Auditor (`pkg/auditor`)
-- Analyzes semantic label keywords (*"Total Assets"*, *"Operating Income"*, *"Net Income"*, *"Subtotal"*).
-- Executes horizontal across-column equations (e.g., $\text{Gross Profit} = \text{Revenue} - \text{COGS}$).
-- Executes vertical down-column summations.
-- Outputs an Audit Confidence Score ($0.0 \dots 1.0$) with flagged discrepancy cell coordinates.
+### Phase 3: Multi-Page Continuation Stitcher (`pkg/grid`)
+- [ ] Subtask 3.1: Running header and page number filtering (`stitcher.go`).
+- [ ] Subtask 3.2: Gaussian column alignment similarity scoring.
+- [ ] Subtask 3.3: Consecutive page table fusion and header deduplication.
 
-### 4.4 Ingestion & Exporters (`pkg/exporter`)
-- **Apache Parquet Exporter**: High-performance typed binary serialization with dictionary encoding and Snappy compression.
-- **DuckDB / SQLite Exporter**: Generates schema-aligned SQL tables directly from extracted grids.
-- **JSON & CSV Exporter**: Generates structured JSON with full cell bounding-box citations for LLM grounding.
+### Phase 4: Arithmetic Reconciliation & Normalizer (`pkg/auditor`)
+- [ ] Subtask 4.1: Currency, negative parenthesis, and scale normalizer (`normalizer.go`).
+- [ ] Subtask 4.2: Vertical summation invariant auditor (`auditor.go`).
+- [ ] Subtask 4.3: Balance sheet and income statement identity rules (`rules.go`).
+- [ ] Subtask 4.4: Discrepancy flagging and audit confidence scoring.
 
-### 4.5 Embedded Web Cockpit (`pkg/cockpit`)
-- Serves interactive UI on port 8787.
-- Features:
-  - **Dual-Pane Document Viewer**: Left pane renders the source PDF page with color-coded bounding-box highlights; right pane renders the interactive data grid.
-  - **Arithmetic Audit Inspector**: Highlights reconciled totals in green; highlights discrepancies in red with mathematical breakdown.
-  - **Parquet Schema & SQL Query Runner**: Lets users execute instant SQL queries directly against extracted tables in the browser.
+### Phase 5: High-Performance Exporters (`pkg/exporter`)
+- [ ] Subtask 5.1: Apache Parquet columnar exporter with Snappy (`parquet.go`).
+- [ ] Subtask 5.2: SQLite embedded database creator with citation table (`sqlite.go`).
+- [ ] Subtask 5.3: DuckDB SQL DDL / DML script generator (`duckdb.go`).
+- [ ] Subtask 5.4: Citation-indexed JSON and hierarchical CSV exporter (`json.go`, `csv.go`).
 
----
+### Phase 6: Embedded Web Cockpit (`pkg/cockpit`)
+- [ ] Subtask 6.1: HTTP server on port 8787 with embedded assets (`server.go`).
+- [ ] Subtask 6.2: Dual-pane visual interface with SVG vector overlays (`web/index.html`, `web/style.css`).
+- [ ] Subtask 6.3: Interactive grid inspection and arithmetic discrepancy breakdown (`web/app.js`).
+- [ ] Subtask 6.4: In-browser SQL console for live query execution against extracted tables.
 
-## 5. Command-Line Interface (CLI)
-
-```bash
-# Extract all financial tables from SEC 10-K and export directly to Parquet
-tablerip extract \
-  --input ./sec_filings/aapl_10k_2025.pdf \
-  --format parquet \
-  --out-dir ./data/tables/ \
-  --audit \
-  --cockpit
-
-# Extract balance sheet and execute strict arithmetic verification
-tablerip audit \
-  --input ./sec_filings/msft_balance_sheet.pdf \
-  --tolerance 0.01 \
-  --strict
-
-# Convert PDF tables to an embedded DuckDB database file
-tablerip export \
-  --input ./sec_filings/nvda_q3.pdf \
-  --duckdb ./db/financials.duckdb \
-  --table-prefix "nvda_2025_"
-
-# Launch the interactive Audit Cockpit directly
-tablerip cockpit \
-  --pdf ./sec_filings/aapl_10k_2025.pdf \
-  --port 8787
-```
-
----
-
-## 6. Directory Structure
-
-```
-B:\workgit\tablerip\
-├── cmd/
-│   └── tablerip/
-│       └── main.go                  # Main entry point & CLI commands
-├── pkg/
-│   ├── pdf/
-│   │   ├── parser.go                # Pure Go PDF stream & token reader
-│   │   ├── geom.go                  # Bounding box & coordinate transforms
-│   │   └── lines.go                 # Vector stroke line detector
-│   ├── grid/
-│   │   ├── segmenter.go             # X-Cut / Y-Cut projection profiler
-│   │   ├── headers.go               # Multi-level hierarchical header builder
-│   │   ├── rows.go                  # Row indentation & parent-child matcher
-│   │   └── stitcher.go              # Multi-page table continuation engine
-│   ├── auditor/
-│   │   ├── auditor.go               # Arithmetic equation verifier
-│   │   ├── normalizer.go            # Currency, parenthesis, & scale parser
-│   │   └── rules.go                 # Accounting balance rules & heuristics
-│   ├── exporter/
-│   │   ├── parquet.go               # Apache Parquet streaming writer
-│   │   ├── duckdb.go                # DuckDB / SQLite table serializer
-│   │   ├── csv.go                   # Standard CSV exporter
-│   │   └── json.go                  # Citation-indexed JSON exporter
-│   └── cockpit/
-│       ├── server.go                # Embedded HTTP server
-│       └── web/
-│           ├── index.html           # Dual-pane PDF and Grid UI
-│           ├── app.js               # Grid overlay & SQL playground
-│           └── style.css            # Dark tech clean UI styling
-├── test/
-│   ├── sample_10k_test.go           # End-to-end multi-page extraction tests
-│   └── auditor_test.go              # Arithmetic reconciliation unit tests
-├── go.mod
-├── go.sum
-├── README.md
-└── MASTER_PLAN.md
-```
-
----
-
-## 7. Implementation Roadmap
-
-### Phase 1: Pure Go PDF Parser & Token Geometry
-- Initialize Go module `github.com/mtlglabs/tablerip`.
-- Implement PDF stream reader for character positions, bounding boxes, and lines.
-- Build spatial coordinate indexing using R-Tree / Interval trees.
-
-### Phase 2: Topological Grid Reconstruction
-- Implement horizontal and vertical projection profiles ($H(y)$ and $V(x)$).
-- Implement multi-level column header hierarchy tree builder.
-- Implement row indentation classifier and unit normalizer (`$(123)` -> `-123`).
-
-### Phase 3: Multi-Page Continuation Stitcher
-- Implement page boundary detection and running header identification.
-- Build column alignment similarity scoring.
-- Stitch fragmented multi-page tables into single consolidated entities.
-
-### Phase 4: Arithmetic Balance Auditor
-- Implement row and column summation reconciliation ($\sum \text{parts} = \text{Total}$).
-- Implement accounting invariant checks for balance sheets and income statements.
-- Generate cell-level discrepancy alerts and confidence scores.
-
-### Phase 5: High-Performance Exporters
-- Implement streaming Apache Parquet writer with Snappy compression.
-- Implement direct DuckDB / SQLite database export.
-- Build citation-indexed JSON output with exact PDF bounding boxes.
-
-### Phase 6: Embedded Web Cockpit
-- Build dual-pane interface on port 8787.
-- Render PDF page canvas with interactive SVG bounding boxes.
-- Implement in-browser SQL query runner against extracted tables.
-
-### Phase 7: Verification and Benchmarks
-- Benchmark extraction speed: $< 250\text{ms}$ per 10-page financial filing.
-- Memory ceiling: strictly $< 25\text{MB}$ RSS.
-- Test accuracy on real SEC 10-K filings with zero arithmetic audit discrepancies.
+### Phase 7: CLI Interface & End-to-End Test Suite (`cmd/tablerip`, `test/`)
+- [ ] Subtask 7.1: CLI subcommands (`extract`, `audit`, `export`, `cockpit`, `benchmark`).
+- [ ] Subtask 7.2: Synthetic multi-page financial PDF test generator.
+- [ ] Subtask 7.3: Integration tests verifying arithmetic balance and multi-page stitching.
+- [ ] Subtask 7.4: Memory benchmark verifying < 25 MB RAM ceiling.
