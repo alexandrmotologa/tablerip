@@ -162,3 +162,11 @@ If $S_{\text{col}} > 0.75$, $T_B$ is stitched into $T_A$, skipping repeated runn
 - [x] Subtask 7.2: Synthetic multi-page financial PDF test generator (`pkg/fixtures`).
 - [x] Subtask 7.3: Integration tests verifying arithmetic balance and multi-page stitching (`test/sample_10k_test.go`).
 - [x] Subtask 7.4: Memory benchmark verifying < 25 MB RAM ceiling (verified at 1.75 MB - 6.6 MB peak).
+
+### Phase 8: Advanced Enterprise Enhancements (`pkg/auditor`, `pkg/grid`, `pkg/edgar`, `pkg/diff`, `pkg/batch`, `pkg/cockpit`)
+- [x] Subtask 8.1: US-GAAP semantic taxonomy mapper (`pkg/auditor/taxonomy.go`).
+- [x] Subtask 8.2: Footnote citation detector and anchor linker (`pkg/grid/footnotes.go`).
+- [x] Subtask 8.3: SEC EDGAR live filing downloader CLI (`pkg/edgar/edgar.go`, `tablerip fetch`).
+- [x] Subtask 8.4: Multi-period reconciliation and historical restatement auditor (`pkg/diff/diff.go`, `tablerip diff`).
+- [x] Subtask 8.5: Bounded concurrent batch worker pool (`pkg/batch/batch.go`, `tablerip batch`).
+- [x] Subtask 8.6: Interactive Web Cockpit upgrades: SVG zoom & pan, live in-browser cell editing with instant re-audit, and SQL query templates (`pkg/cockpit`).

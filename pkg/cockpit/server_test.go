@@ -82,4 +82,29 @@ func TestCockpitServerEndpoints(t *testing.T) {
 	if resp.Rows[0][0] != "Revenue" {
 		t.Errorf("expected row_label 'Revenue', got '%v'", resp.Rows[0][0])
 	}
+
+	// Test 4: POST /api/cell/update (live cell update and instant re-audit)
+	updatePayload, _ := json.Marshal(CellUpdateRequest{
+		TableID:  "tbl_001",
+		RowIndex: 0,
+		ColIndex: 1,
+		RawText:  "7500",
+	})
+	reqUpdate := httptest.NewRequest("POST", "/api/cell/update", bytes.NewReader(updatePayload))
+	wUpdate := httptest.NewRecorder()
+	server.handleCellUpdate(wUpdate, reqUpdate)
+	if wUpdate.Code != http.StatusOK {
+		t.Errorf("expected 200 OK from /api/cell/update, got %d", wUpdate.Code)
+	}
+
+	var updateResp CellUpdateResponse
+	if err := json.NewDecoder(wUpdate.Body).Decode(&updateResp); err != nil {
+		t.Fatalf("failed to decode cell update response: %v", err)
+	}
+	if !updateResp.Success {
+		t.Errorf("expected success true, got false")
+	}
+	if updateResp.Table.Rows[0].Cells[1].Value != 7500.0 {
+		t.Errorf("expected updated value 7500, got %v", updateResp.Table.Rows[0].Cells[1].Value)
+	}
 }

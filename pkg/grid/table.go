@@ -9,17 +9,20 @@ import (
 
 // Cell represents a single table cell in the reconstructed grid.
 type Cell struct {
-	ColIndex  int      `json:"col_index"`
-	RowIndex  int      `json:"row_index"`
-	PageNum   int      `json:"page_num"`
-	Text      string   `json:"text"`
-	RawText   string   `json:"raw_text"`
-	Value     float64  `json:"value"`
-	IsNumeric bool     `json:"is_numeric"`
-	Currency  string   `json:"currency"`
-	BBox      pdf.BBox `json:"bbox"`
-	Audited   bool     `json:"audited"`
-	AuditPass bool     `json:"audit_pass"`
+	ColIndex       int      `json:"col_index"`
+	RowIndex       int      `json:"row_index"`
+	PageNum        int      `json:"page_num"`
+	Text           string   `json:"text"`
+	RawText        string   `json:"raw_text"`
+	Value          float64  `json:"value"`
+	IsNumeric      bool     `json:"is_numeric"`
+	Currency       string   `json:"currency"`
+	GAAPTag        string   `json:"gaap_tag,omitempty"`
+	FootnoteMarker string   `json:"footnote_marker,omitempty"`
+	FootnoteText   string   `json:"footnote_text,omitempty"`
+	BBox           pdf.BBox `json:"bbox"`
+	Audited        bool     `json:"audited"`
+	AuditPass      bool     `json:"audit_pass"`
 }
 
 // Column represents a detected column with bounding intervals and hierarchical name.
@@ -38,16 +41,19 @@ func (c *Column) CenterX() float64 {
 
 // Row represents a line in the financial table with hierarchical indentation.
 type Row struct {
-	Index       int      `json:"index"`
-	Level       int      `json:"level"`
-	Label       string   `json:"label"`
-	Section     string   `json:"section,omitempty"`
-	IsHeader    bool     `json:"is_header"`
-	IsTotal     bool     `json:"is_total"`
-	PageNum     int      `json:"page_num"`
-	ParentIndex int      `json:"parent_index"`
-	BBox        pdf.BBox `json:"bbox"`
-	Cells       []*Cell  `json:"cells"`
+	Index          int      `json:"index"`
+	Level          int      `json:"level"`
+	Label          string   `json:"label"`
+	Section        string   `json:"section,omitempty"`
+	GAAPTag        string   `json:"gaap_tag,omitempty"`
+	FootnoteMarker string   `json:"footnote_marker,omitempty"`
+	FootnoteText   string   `json:"footnote_text,omitempty"`
+	IsHeader       bool     `json:"is_header"`
+	IsTotal        bool     `json:"is_total"`
+	PageNum        int      `json:"page_num"`
+	ParentIndex    int      `json:"parent_index"`
+	BBox           pdf.BBox `json:"bbox"`
+	Cells          []*Cell  `json:"cells"`
 }
 
 // GetCell returns the cell for a specific column index, or nil.
@@ -62,14 +68,15 @@ func (r *Row) GetCell(colIdx int) *Cell {
 
 // Table represents a reconstructed financial table, potentially spanning multiple pages.
 type Table struct {
-	ID        string    `json:"id"`
-	Title     string    `json:"title"`
-	Columns   []*Column `json:"columns"`
-	Rows      []*Row    `json:"rows"`
-	Pages     []int     `json:"pages"`
-	BBox      pdf.BBox  `json:"bbox"`
-	ScaleUnit string    `json:"scale_unit,omitempty"` // e.g. "millions", "thousands"
-	ScaleMult float64   `json:"scale_mult,omitempty"` // e.g. 1e6, 1e3
+	ID        string      `json:"id"`
+	Title     string      `json:"title"`
+	Columns   []*Column   `json:"columns"`
+	Rows      []*Row      `json:"rows"`
+	Pages     []int       `json:"pages"`
+	BBox      pdf.BBox    `json:"bbox"`
+	ScaleUnit string      `json:"scale_unit,omitempty"` // e.g. "millions", "thousands"
+	ScaleMult float64     `json:"scale_mult,omitempty"` // e.g. 1e6, 1e3
+	Footnotes []*Footnote `json:"footnotes,omitempty"`
 }
 
 // DataRows returns only the non-header rows of the table.

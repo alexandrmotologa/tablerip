@@ -21,6 +21,93 @@ document.addEventListener('DOMContentLoaded', () => {
   const runSqlBtn = document.getElementById('runSqlBtn');
   const sqlInput = document.getElementById('sqlInput');
   const sqlResults = document.getElementById('sqlResults');
+  const canvasWrapper = document.getElementById('canvasWrapper');
+  const zoomInBtn = document.getElementById('zoomInBtn');
+  const zoomOutBtn = document.getElementById('zoomOutBtn');
+  const zoomResetBtn = document.getElementById('zoomResetBtn');
+  const sqlTemplates = document.getElementById('sqlTemplates');
+
+  // Zoom & Pan State
+  let zoomLevel = 1.0;
+  let panX = 0;
+  let panY = 0;
+  let isDragging = false;
+  let dragStartX = 0;
+  let dragStartY = 0;
+
+  function applyCanvasTransform() {
+    pageCanvas.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel})`;
+  }
+
+  if (zoomInBtn) {
+    zoomInBtn.addEventListener('click', () => {
+      zoomLevel = Math.min(zoomLevel + 0.25, 3.5);
+      applyCanvasTransform();
+    });
+  }
+
+  if (zoomOutBtn) {
+    zoomOutBtn.addEventListener('click', () => {
+      zoomLevel = Math.max(zoomLevel - 0.25, 0.4);
+      applyCanvasTransform();
+    });
+  }
+
+  if (zoomResetBtn) {
+    zoomResetBtn.addEventListener('click', () => {
+      zoomLevel = 1.0;
+      panX = 0;
+      panY = 0;
+      applyCanvasTransform();
+    });
+  }
+
+  if (canvasWrapper) {
+    canvasWrapper.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.15 : -0.15;
+      zoomLevel = Math.max(0.4, Math.min(3.5, zoomLevel + delta));
+      applyCanvasTransform();
+    }, { passive: false });
+
+    canvasWrapper.addEventListener('mousedown', (e) => {
+      if (e.button === 0) {
+        isDragging = true;
+        dragStartX = e.clientX - panX;
+        dragStartY = e.clientY - panY;
+        canvasWrapper.classList.add('is-panning');
+      }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (isDragging) {
+        panX = e.clientX - dragStartX;
+        panY = e.clientY - dragStartY;
+        applyCanvasTransform();
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        canvasWrapper.classList.remove('is-panning');
+      }
+    });
+  }
+
+  if (sqlTemplates) {
+    sqlTemplates.addEventListener('change', () => {
+      const val = sqlTemplates.value;
+      if (val) {
+        let q = val;
+        if (currentTable && currentTable.table) {
+          q = q.replace(/tbl_001/g, currentTable.table.id);
+        }
+        sqlInput.value = q;
+        executeSQL();
+      }
+    });
+  }
 
   // Exports
   document.getElementById('exportParquetBtn').addEventListener('click', () => triggerExport('parquet'));
@@ -226,6 +313,9 @@ document.addEventListener('DOMContentLoaded', () => {
           td.innerHTML = indent + (row.label || '');
         } else if (cell) {
           td.textContent = cell.raw_text || '';
+          td.setAttribute('contenteditable', 'true');
+          td.dataset.initial = cell.raw_text || '';
+
           if (cell.audited) {
             if (cell.audit_pass) {
               td.classList.add('cell-audited-pass');
@@ -235,6 +325,14 @@ document.addEventListener('DOMContentLoaded', () => {
               td.innerHTML += ' <span class="audit-indicator text-danger">✗</span>';
             }
           }
+
+          td.addEventListener('blur', () => onCellCommit(td, table, row.index, cIdx));
+          td.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              td.blur();
+            }
+          });
         }
 
         td.addEventListener('mouseenter', () => {
@@ -255,6 +353,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
       tableBody.appendChild(tr);
     });
+  }
+
+  async function onCellCommit(td, table, rIdx, cIdx) {
+    let cleanText = td.innerText.replace(/[✓✗]/g, '').trim();
+    if (cleanText === td.dataset.initial) return;
+
+    td.dataset.initial = cleanText;
+    cellDetails.textContent = `Updating cell R${rIdx}:C${cIdx}...`;
+
+    try {
+      const res = await fetch('/api/cell/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          table_id: table.id,
+          row_index: rIdx,
+          col_index: cIdx,
+          raw_text: cleanText
+        })
+      });
+
+      const data = await res.json();
+      if (data.success && data.table) {
+        const itemIdx = tablesData.findIndex(t => t.table.id === table.id);
+        if (itemIdx !== -1) {
+          tablesData[itemIdx].table = data.table;
+          tablesData[itemIdx].audit_report = data.audit_report;
+        }
+        currentTable = tablesData[itemIdx];
+        renderTable(currentTable.table);
+        renderAudit(currentTable.audit_report);
+        cellDetails.textContent = `Cell R${rIdx}:C${cIdx} updated to "${cleanText}". Arithmetic audit re-evaluated.`;
+      } else {
+        cellDetails.textContent = `Failed to update cell: ${data.error || 'Unknown error'}`;
+      }
+    } catch (err) {
+      cellDetails.textContent = `Network error updating cell: ${err.message}`;
+    }
   }
 
   function renderAudit(report) {

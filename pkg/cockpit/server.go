@@ -77,6 +77,7 @@ func (s *Server) Start() error {
 	mux.HandleFunc("/api/tables", s.handleTables)
 	mux.HandleFunc("/api/query", s.handleSQLQuery)
 	mux.HandleFunc("/api/export", s.handleExport)
+	mux.HandleFunc("/api/cell/update", s.handleCellUpdate)
 
 	addr := fmt.Sprintf(":%d", s.port)
 	s.server = &http.Server{
@@ -291,4 +292,101 @@ func serveFileAndDelete(w http.ResponseWriter, filePath string) {
 	defer os.Remove(filePath)
 
 	io.Copy(w, f)
+}
+
+// CellUpdateRequest represents payload for live in-browser cell edits.
+type CellUpdateRequest struct {
+	TableID  string `json:"table_id"`
+	RowIndex int    `json:"row_index"`
+	ColIndex int    `json:"col_index"`
+	RawText  string `json:"raw_text"`
+}
+
+// CellUpdateResponse represents the response containing re-audited table state.
+type CellUpdateResponse struct {
+	Success     bool                 `json:"success"`
+	Error       string               `json:"error,omitempty"`
+	Table       *grid.Table          `json:"table,omitempty"`
+	AuditReport *auditor.AuditReport `json:"audit_report,omitempty"`
+}
+
+func (s *Server) handleCellUpdate(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != http.MethodPost {
+		http.Error(w, `{"error": "method not allowed"}`, http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req CellUpdateRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		json.NewEncoder(w).Encode(CellUpdateResponse{Success: false, Error: "invalid JSON body"})
+		return
+	}
+
+	var targetTable *grid.Table
+	for _, t := range s.tables {
+		if t.ID == req.TableID {
+			targetTable = t
+			break
+		}
+	}
+	if targetTable == nil {
+		json.NewEncoder(w).Encode(CellUpdateResponse{Success: false, Error: "table not found"})
+		return
+	}
+
+	// Update cell in table data structure
+	for _, row := range targetTable.Rows {
+		if row.Index == req.RowIndex {
+			if req.ColIndex == 0 {
+				row.Label = req.RawText
+			}
+			for _, c := range row.Cells {
+				if c.ColIndex == req.ColIndex {
+					c.RawText = req.RawText
+					if numVal, isNum, _ := auditor.ParseFinancialNumber(req.RawText); isNum {
+						c.Value = numVal
+						c.IsNumeric = true
+					} else {
+						c.Value = 0
+						c.IsNumeric = false
+					}
+					break
+				}
+			}
+			break
+		}
+	}
+
+	// Re-run arithmetic audit
+	aud := auditor.NewAuditor(0.01, true)
+	newReport := aud.AuditTable(targetTable)
+
+	// Replace report in memory
+	foundReport := false
+	for i, rep := range s.reports {
+		if rep != nil && rep.TableID == targetTable.ID {
+			s.reports[i] = newReport
+			foundReport = true
+			break
+		}
+	}
+	if !foundReport {
+		s.reports = append(s.reports, newReport)
+	}
+
+	// Re-sync SQLite in-memory table
+	if s.db != nil {
+		tblName := targetTable.ID
+		_, _ = s.db.Exec(fmt.Sprintf("DROP TABLE IF EXISTS %s;", tblName))
+		_, _ = s.db.Exec(fmt.Sprintf("DROP TABLE IF EXISTS %s_citations;", tblName))
+		exp := exporter.NewSQLiteExporter()
+		_ = exp.ExportTableToDB(targetTable, s.db, "")
+	}
+
+	json.NewEncoder(w).Encode(CellUpdateResponse{
+		Success:     true,
+		Table:       targetTable,
+		AuditReport: newReport,
+	})
 }

@@ -240,5 +240,24 @@ func (e *Extractor) ExtractFromPage(page *pdf.PageData) []*Table {
 		ScaleMult: scaleMult,
 	}
 
+	// Extract and link footnotes below data rows
+	var footerTokens []pdf.Token
+	lastRowY1 := tableBBox.Y1
+	if len(structuredRows) > 0 {
+		lastRowY1 = structuredRows[len(structuredRows)-1].BBox.Y1
+	}
+
+	for _, t := range pageTokens {
+		if t.BBox.Y0 >= lastRowY1-2.0 && t.BBox.Y1 > lastRowY1 {
+			footerTokens = append(footerTokens, t)
+		}
+	}
+
+	fnLinker := NewFootnoteLinker()
+	footnotes := fnLinker.ExtractFootnotes(footerTokens)
+	if len(footnotes) > 0 {
+		fnLinker.LinkFootnotesToTable(table, footnotes)
+	}
+
 	return []*Table{table}
 }

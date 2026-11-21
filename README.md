@@ -112,7 +112,43 @@ Start the dual-pane visual inspection cockpit on port 8787:
   --port 8787
 ```
 
-Open `http://localhost:8787` in your browser.
+Open `http://localhost:8787` in your browser. Features interactive SVG zoom and pan, live in-place cell editing with real-time arithmetic re-audit, and pre-built SQL query templates.
+
+### Download SEC Filings from EDGAR
+
+Locate, download, and extract financial tables directly from SEC EDGAR by company ticker:
+
+```bash
+./bin/tablerip fetch \
+  --ticker AAPL \
+  --form 10-K \
+  --year 2024 \
+  --out-dir ./data/sec/ \
+  --extract
+```
+
+### Multi-Period Reconciliation & Restatement Audit
+
+Reconcile historical periods across two filings and detect restatements or revisions:
+
+```bash
+./bin/tablerip diff \
+  --base ./sec_filings/aapl_10k_2024.pdf \
+  --target ./sec_filings/aapl_10k_2025.pdf \
+  --out ./reports/restatement_diff.json
+```
+
+### Parallel Batch Processing
+
+Process entire directories of financial filings with a bounded worker pool:
+
+```bash
+./bin/tablerip batch \
+  --input-dir ./filings/ \
+  --out-dir ./batch_output/ \
+  --format all \
+  --concurrency 4
+```
 
 ## Mathematical Formulation
 
@@ -148,13 +184,17 @@ Where $\sigma_j \in \{+1, -1\}$ accounts for deductions. If $\epsilon(c) > 0.01$
 tablerip/
 ├── cmd/
 │   └── tablerip/
-│       └── main.go              # CLI command router and flags
+│       └── main.go              # CLI command router and subcommands
 ├── pkg/
 │   ├── pdf/                     # Pure Go PDF token extraction and geometry
-│   ├── grid/                    # Spatial projection, headers, rows, stitcher
-│   ├── auditor/                 # Mathematical balance checks and normalizer
+│   ├── grid/                    # Spatial projection, headers, rows, stitcher, footnotes
+│   ├── auditor/                 # Mathematical balance checks, normalizer, GAAP taxonomy
+│   ├── batch/                   # Bounded concurrent worker pool for batch ingestion
+│   ├── diff/                    # Multi-period reconciliation and restatement auditor
+│   ├── edgar/                   # SEC EDGAR client and filing ingestor
 │   ├── exporter/                # Parquet, SQLite, DuckDB, JSON, CSV writers
-│   └── cockpit/                 # Embedded HTTP server and web UI
+│   ├── fixtures/                # Synthetic authentic SEC filing generator
+│   └── cockpit/                 # Embedded HTTP server and dual-pane web UI
 ├── docs/                        # Architecture, algorithms, and format specs
 ├── test/                        # End-to-end integration and benchmark tests
 ├── go.mod

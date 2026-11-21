@@ -11,7 +11,10 @@ import (
 	"time"
 
 	"github.com/alexandrmotologa/tablerip/pkg/auditor"
+	"github.com/alexandrmotologa/tablerip/pkg/batch"
 	"github.com/alexandrmotologa/tablerip/pkg/cockpit"
+	"github.com/alexandrmotologa/tablerip/pkg/diff"
+	"github.com/alexandrmotologa/tablerip/pkg/edgar"
 	"github.com/alexandrmotologa/tablerip/pkg/exporter"
 	"github.com/alexandrmotologa/tablerip/pkg/fixtures"
 	"github.com/alexandrmotologa/tablerip/pkg/grid"
@@ -41,6 +44,12 @@ func main() {
 		runBenchmark(os.Args[2:])
 	case "generate":
 		runGenerate(os.Args[2:])
+	case "fetch":
+		runFetch(os.Args[2:])
+	case "diff":
+		runDiff(os.Args[2:])
+	case "batch":
+		runBatch(os.Args[2:])
 	case "version":
 		fmt.Printf("tablerip v%s (pure Go, zero Cgo)\n", version)
 	default:
@@ -78,6 +87,9 @@ Commands:
   extract    Extract tables from PDF and export to Parquet, SQLite, JSON, or CSV
   audit      Run strict arithmetic balance reconciliation on financial statements
   export     Convert extracted tables into a specific target database or file
+  fetch      Download SEC EDGAR filings by ticker/form and extract financials
+  diff       Reconcile multi-period statements and detect historical restatements
+  batch      Process directories of financial PDFs with bounded worker pool
   cockpit    Launch interactive dual-pane visual inspection cockpit on port 8787
   benchmark  Measure execution latency and verify < 25MB RAM memory ceiling
   generate   Create authentic synthetic multi-page SEC 10-K filing PDF
@@ -426,5 +438,184 @@ func startCockpit(doc *pdf.Document, tables []*grid.Table, reports []*auditor.Au
 	if err := server.Start(); err != nil && err != http.ErrServerClosed {
 		fmt.Fprintf(os.Stderr, "Cockpit error: %v\n", err)
 		os.Exit(1)
+	}
+}
+
+func runFetch(args []string) {
+	fs := flag.NewFlagSet("fetch", flag.ExitOnError)
+	ticker := fs.String("ticker", "", "Stock ticker symbol (e.g. AAPL, MSFT, NVDA)")
+	form := fs.String("form", "10-K", "SEC form type: 10-K, 10-Q, 8-K")
+	year := fs.Int("year", 0, "Filing year (default: 0 for most recent)")
+	outDir := fs.String("out-dir", "./data/sec", "Directory to save downloaded filing")
+	extract := fs.Bool("extract", true, "Extract financial tables after downloading")
+	auditFlag := fs.Bool("audit", true, "Run arithmetic balance reconciliation")
+	launchCockpit := fs.Bool("cockpit", false, "Launch Cockpit server after download and extraction")
+	port := fs.Int("port", 8787, "Port for web cockpit")
+	fs.Parse(args)
+
+	if *ticker == "" {
+		fmt.Fprintln(os.Stderr, "Error: --ticker flag is required (e.g. -ticker AAPL)")
+		fs.Usage()
+		os.Exit(1)
+	}
+
+	client := edgar.NewClient("")
+	fmt.Printf("[EDGAR] Locating SEC filing for %s (Form: %s, Year: %d)...\n", *ticker, *form, *year)
+	filing, err := client.FindFiling(*ticker, *form, *year)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "EDGAR error: %v\n", err)
+		os.Exit(1)
+	}
+
+	destFile := filepath.Join(*outDir, fmt.Sprintf("%s_%s_%s.pdf", strings.ToUpper(*ticker), filing.Form, filing.FilingDate))
+	fmt.Printf("[EDGAR] Found filing accession %s (Filing Date: %s)\n", filing.AccessionNumber, filing.FilingDate)
+	fmt.Printf("[EDGAR] Downloading primary document: %s\n", filing.DocumentURL)
+
+	if err := client.DownloadFiling(filing, destFile); err != nil {
+		fmt.Fprintf(os.Stderr, "Download error: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("[SUCCESS] Downloaded filing to: %s\n", destFile)
+
+	if *extract {
+		fmt.Println("[tablerip] Extracting tables from downloaded filing...")
+		doc, tables, reports, err := processDocument(destFile, *auditFlag, 0.01, false)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Extraction error: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("[SUCCESS] Extracted %d table(s) across %d page(s)\n", len(tables), doc.NumPages)
+		if *launchCockpit {
+			startCockpit(doc, tables, reports, *port)
+		}
+	}
+}
+
+func runDiff(args []string) {
+	fs := flag.NewFlagSet("diff", flag.ExitOnError)
+	base := fs.String("base", "", "Base (prior period) financial PDF file")
+	target := fs.String("target", "", "Target (current period) financial PDF file")
+	out := fs.String("out", "", "Optional output path to write JSON diff report")
+	tolerance := fs.Float64("tolerance", 0.01, "Restatement delta tolerance")
+	fs.Parse(args)
+
+	if *base == "" || *target == "" {
+		fmt.Fprintln(os.Stderr, "Error: both --base and --target flags are required")
+		fs.Usage()
+		os.Exit(1)
+	}
+
+	fmt.Printf("[tablerip diff] Extracting base filing: %s\n", *base)
+	_, baseTables, _, err := processDocument(*base, true, 0.01, false)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Base extraction error: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("[tablerip diff] Extracting target filing: %s\n", *target)
+	_, targetTables, _, err := processDocument(*target, true, 0.01, false)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Target extraction error: %v\n", err)
+		os.Exit(1)
+	}
+
+	engine := diff.NewEngine(*tolerance)
+	docDiff := engine.CompareDocuments(baseTables, targetTables, *base, *target)
+
+	fmt.Printf("\n=== Multi-Period Reconciliation Report ===\n")
+	fmt.Printf("Base Filing:   %s (%d tables)\n", *base, len(baseTables))
+	fmt.Printf("Target Filing: %s (%d tables)\n", *target, len(targetTables))
+	fmt.Printf("Compared Line Items: %d\n", docDiff.TotalComparedItems)
+	fmt.Printf("Detected Restatements: %d\n\n", docDiff.TotalRestatements)
+
+	for _, td := range docDiff.TableDiffs {
+		fmt.Println(td.FormatMarkdown())
+	}
+
+	if *out != "" {
+		if err := docDiff.ExportJSON(*out); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to write JSON diff report: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("[SUCCESS] Saved JSON diff report to: %s\n", *out)
+	}
+
+	if docDiff.TotalRestatements > 0 {
+		fmt.Printf("\n[ALERT] Found %d historical restatements across statements.\n", docDiff.TotalRestatements)
+	} else {
+		fmt.Println("\n[SUCCESS] All historical prior-period values matched target filing exactly.")
+	}
+}
+
+func runBatch(args []string) {
+	fs := flag.NewFlagSet("batch", flag.ExitOnError)
+	inputDir := fs.String("input-dir", "", "Directory containing PDF financial filings")
+	outDir := fs.String("out-dir", "./data/batch_out", "Directory for exported tables and audit ledger")
+	format := fs.String("format", "all", "Export formats: parquet, sqlite, json, csv, or all")
+	concurrency := fs.Int("concurrency", runtime.NumCPU(), "Worker pool concurrency")
+	tolerance := fs.Float64("tolerance", 0.01, "Floating-point balance tolerance")
+	recursive := fs.Bool("recursive", false, "Recursively scan subdirectories for PDFs")
+	fs.Parse(args)
+
+	if *inputDir == "" {
+		fmt.Fprintln(os.Stderr, "Error: --input-dir flag is required")
+		fs.Usage()
+		os.Exit(1)
+	}
+
+	var formats []string
+	if *format == "all" {
+		formats = []string{"parquet", "sqlite", "json", "csv"}
+	} else {
+		formats = strings.Split(*format, ",")
+	}
+
+	cfg := batch.Config{
+		Concurrency:          *concurrency,
+		ExportFormats:        formats,
+		OutputDir:            *outDir,
+		Tolerance:            *tolerance,
+		CheckAccountingRules: true,
+		ConsolidatedSQLite:   true,
+		ProgressFn: func(completed, total int, currentFile string, err error) {
+			fname := filepath.Base(currentFile)
+			if err != nil {
+				fmt.Printf("[%d/%d] FAIL: %s (%v)\n", completed, total, fname, err)
+			} else {
+				fmt.Printf("[%d/%d] PASS: %s\n", completed, total, fname)
+			}
+		},
+	}
+
+	pool := batch.NewPool(cfg)
+	fmt.Printf("[BATCH] Starting worker pool (concurrency=%d) on directory: %s\n", *concurrency, *inputDir)
+	start := time.Now()
+
+	report, err := pool.ProcessDirectory(*inputDir, *recursive)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Batch processing failed: %v\n", err)
+		os.Exit(1)
+	}
+
+	elapsed := time.Since(start)
+	fmt.Printf("\n=== Batch Processing Summary ===\n")
+	fmt.Printf("Total Files:        %d\n", report.TotalFiles)
+	fmt.Printf("Successful Files:   %d\n", report.SuccessfulFiles)
+	fmt.Printf("Failed Files:       %d\n", report.FailedFiles)
+	fmt.Printf("Total Tables:       %d\n", report.TotalTables)
+	fmt.Printf("Audit Invariants:   %d checked\n", report.TotalAuditChecks)
+	fmt.Printf("Discrepancies:      %d\n", report.TotalDiscrepancies)
+	fmt.Printf("Elapsed Time:       %v\n", elapsed)
+	if report.ConsolidatedLedgerPath != "" {
+		fmt.Printf("Audit Ledger:       %s\n", report.ConsolidatedLedgerPath)
+	}
+	if report.ConsolidatedSQLitePath != "" {
+		fmt.Printf("Master SQLite DB:   %s\n", report.ConsolidatedSQLitePath)
+	}
+
+	if !report.AllPassed {
+		fmt.Println("\n[ALERT] One or more files failed processing or had arithmetic discrepancies.")
+	} else {
+		fmt.Println("\n[SUCCESS] Batch processing completed with zero discrepancies across all filings.")
 	}
 }

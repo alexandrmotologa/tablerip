@@ -16,6 +16,9 @@ type ParquetCellRecord struct {
 	HierarchyLevel int32   `parquet:"hierarchy_level"`
 	RowLabel       string  `parquet:"row_label"`
 	Section        string  `parquet:"section"`
+	GAAPTag        string  `parquet:"gaap_tag"`
+	FootnoteMarker string  `parquet:"footnote_marker"`
+	FootnoteText   string  `parquet:"footnote_text"`
 	IsTotal        bool    `parquet:"is_total"`
 	PageNumber     int32   `parquet:"page_number"`
 	ColIndex       int32   `parquet:"col_index"`
@@ -63,6 +66,9 @@ func (pe *ParquetExporter) ExportTable(table *grid.Table, outputPath string) err
 				HierarchyLevel: int32(row.Level),
 				RowLabel:       row.Label,
 				Section:        row.Section,
+				GAAPTag:        row.GAAPTag,
+				FootnoteMarker: row.FootnoteMarker,
+				FootnoteText:   row.FootnoteText,
 				IsTotal:        row.IsTotal,
 				PageNumber:     int32(row.PageNum),
 				ColIndex:       int32(colIdx),
@@ -76,6 +82,13 @@ func (pe *ParquetExporter) ExportTable(table *grid.Table, outputPath string) err
 				rec.Value = cell.Value
 				rec.IsNumeric = cell.IsNumeric
 				rec.Currency = cell.Currency
+				if cell.GAAPTag != "" {
+					rec.GAAPTag = cell.GAAPTag
+				}
+				if cell.FootnoteMarker != "" {
+					rec.FootnoteMarker = cell.FootnoteMarker
+					rec.FootnoteText = cell.FootnoteText
+				}
 				rec.BBoxX0 = cell.BBox.X0
 				rec.BBoxY0 = cell.BBox.Y0
 				rec.BBoxX1 = cell.BBox.X1

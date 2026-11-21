@@ -59,6 +59,7 @@ func (se *SQLiteExporter) ExportTableToDB(table *grid.Table, db *sql.DB, tablePr
 	colDefs = append(colDefs, "row_id INTEGER PRIMARY KEY")
 	colDefs = append(colDefs, "hierarchy_level INTEGER")
 	colDefs = append(colDefs, "row_label TEXT NOT NULL")
+	colDefs = append(colDefs, "gaap_tag TEXT")
 	colDefs = append(colDefs, "section TEXT")
 	colDefs = append(colDefs, "is_total BOOLEAN")
 
@@ -79,6 +80,9 @@ func (se *SQLiteExporter) ExportTableToDB(table *grid.Table, db *sql.DB, tablePr
 		row_id INTEGER,
 		col_index INTEGER,
 		col_name TEXT,
+		gaap_tag TEXT,
+		footnote_marker TEXT,
+		footnote_text TEXT,
 		page_number INTEGER,
 		bbox_x0 REAL,
 		bbox_y0 REAL,
@@ -94,11 +98,11 @@ func (se *SQLiteExporter) ExportTableToDB(table *grid.Table, db *sql.DB, tablePr
 	}
 
 	// Prepare data insert
-	placeholders := make([]string, 5+len(valueColNames))
+	placeholders := make([]string, 6+len(valueColNames))
 	for i := range placeholders {
 		placeholders[i] = "?"
 	}
-	insertCols := []string{"row_id", "hierarchy_level", "row_label", "section", "is_total"}
+	insertCols := []string{"row_id", "hierarchy_level", "row_label", "gaap_tag", "section", "is_total"}
 	insertCols = append(insertCols, valueColNames...)
 
 	insertDataSQL := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s);",
@@ -111,8 +115,8 @@ func (se *SQLiteExporter) ExportTableToDB(table *grid.Table, db *sql.DB, tablePr
 
 	// Prepare citation insert
 	insertCitationSQL := fmt.Sprintf(`INSERT INTO %s 
-		(row_id, col_index, col_name, page_number, bbox_x0, bbox_y0, bbox_x1, bbox_y1, raw_text, value, audited, audit_passed)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`, citationTableName)
+		(row_id, col_index, col_name, gaap_tag, footnote_marker, footnote_text, page_number, bbox_x0, bbox_y0, bbox_x1, bbox_y1, raw_text, value, audited, audit_passed)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`, citationTableName)
 	citStmt, err := tx.Prepare(insertCitationSQL)
 	if err != nil {
 		return fmt.Errorf("failed to prepare citation insert: %w", err)
@@ -125,6 +129,7 @@ func (se *SQLiteExporter) ExportTableToDB(table *grid.Table, db *sql.DB, tablePr
 			row.Index,
 			row.Level,
 			row.Label,
+			row.GAAPTag,
 			row.Section,
 			row.IsTotal,
 		}
@@ -147,10 +152,28 @@ func (se *SQLiteExporter) ExportTableToDB(table *grid.Table, db *sql.DB, tablePr
 				if cell.AuditPass {
 					passInt = 1
 				}
+
+				fnMarker := cell.FootnoteMarker
+				if fnMarker == "" {
+					fnMarker = row.FootnoteMarker
+				}
+				fnText := cell.FootnoteText
+				if fnText == "" {
+					fnText = row.FootnoteText
+				}
+
+				gaap := cell.GAAPTag
+				if gaap == "" {
+					gaap = row.GAAPTag
+				}
+
 				_, err := citStmt.Exec(
 					row.Index,
 					colIdx,
 					table.Columns[colIdx].Name,
+					gaap,
+					fnMarker,
+					fnText,
 					row.PageNum,
 					cell.BBox.X0,
 					cell.BBox.Y0,

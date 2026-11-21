@@ -567,3 +567,78 @@ body {
   display: flex;
   gap: 16px;
 }
+
+/* Zoom & Pan Controls */
+.vector-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-xs {
+  padding: 2px 7px;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.canvas-wrapper {
+  overflow: hidden;
+  cursor: grab;
+  position: relative;
+  user-select: none;
+}
+
+.canvas-wrapper.is-panning {
+  cursor: grabbing;
+}
+
+.page-canvas {
+  transform-origin: 0 0;
+}
+
+/* Grid In-Place Editing */
+.grid-helper-bar {
+  padding: 6px 14px;
+  background-color: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 11px;
+  color: var(--accent-cyan);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.financial-table td[contenteditable="true"] {
+  cursor: text;
+  outline: none;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.financial-table td[contenteditable="true"]:hover {
+  background-color: rgba(88, 166, 255, 0.1);
+}
+
+.financial-table td[contenteditable="true"]:focus {
+  background-color: rgba(88, 166, 255, 0.2);
+  box-shadow: inset 0 0 0 1px var(--accent-blue);
+}
+
+/* SQL Template Bar */
+.sql-template-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px 0 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.form-select-sm {
+  padding: 4px 8px;
+  font-size: 12px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 4px;
+  outline: none;
+}

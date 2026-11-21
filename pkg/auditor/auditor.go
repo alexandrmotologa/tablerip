@@ -161,11 +161,15 @@ func (a *Auditor) AuditTable(table *grid.Table) *AuditReport {
 
 func (a *Auditor) normalizeTableCells(table *grid.Table) {
 	for _, row := range table.Rows {
+		tag := MapLabelToGAAP(row.Label, row.Section)
+		row.GAAPTag = tag
+
 		for _, cell := range row.Cells {
 			val, isNum, cur := ParseFinancialNumber(cell.RawText)
 			cell.Value = val
 			cell.IsNumeric = isNum
 			cell.Currency = cur
+			cell.GAAPTag = tag
 			cell.Audited = false
 			cell.AuditPass = true
 		}
